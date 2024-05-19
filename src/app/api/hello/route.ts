@@ -1,5 +1,7 @@
+import { NextRequest, NextResponse } from 'next/server';
+
 // Define the runtime environment
-export const runtime = 'edge'
+export const runtime = 'edge';
 
 // Define the response mapping
 const responseArray: { [key: number]: string } = {
@@ -15,10 +17,10 @@ function getRandomMessage(): string {
   return responseArray[id]; // Return the message associated with the random number
 }
 
-// Export the API route handler function
-export default async function handler(req: Request): Promise<Response> {
+// API route handler function
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const responseMessage = getRandomMessage(); // Call the function to get a random message
-  return new Response(responseMessage, {
+  return new NextResponse(responseMessage, {
     headers: { 'content-type': 'text/plain' }
   });
 }
