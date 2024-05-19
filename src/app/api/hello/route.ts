@@ -1,3 +1,5 @@
+//site https://codeclub4.erichayth.com/api/hello
+
 import { NextRequest, NextResponse } from 'next/server';
 
 // Define the runtime environment
