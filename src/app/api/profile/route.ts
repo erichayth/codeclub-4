@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { KVNamespace } from '@cloudflare/workers-types';
 
+// Define the runtime environment
+export const runtime = 'edge';
+
 // Declare the KV namespace
 declare const codeclub_namespace: KVNamespace;
 
