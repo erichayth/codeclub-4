@@ -1,40 +1,44 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { KVNamespace } from '@cloudflare/workers-types';
 
 // Declare the KV namespace
 declare const codeclub_namespace: KVNamespace;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export async function GET(request: NextRequest) {
+  return handler(request);
+}
+
+export async function POST(request: NextRequest) {
+  return handler(request);
+}
+
+async function handler(request: NextRequest) {
   // Get the 'UserID' from the request headers
-  const userId = req.headers['userid'] as string;
+  const userId = request.headers.get('userid');
 
   if (!userId) {
-    res.status(400).json({ message: 'UserID header is missing' });
-    return;
+    return new NextResponse('UserID header is missing', { status: 400 });
   }
 
   // Fetch the value from the KV store
   const authToken = await codeclub_namespace.get(userId);
 
   if (!authToken) {
-    res.status(404).json({ message: 'Auth token not found for UserID' });
-    return;
+    return new NextResponse('Auth token not found for UserID', { status: 404 });
   }
 
-  // Clone the request and add the 'Auth-Token' header
-  const modifiedHeaders: HeadersInit = {
-    ...req.headers,
-    'Auth-Token': authToken,
-  };
+  // Create a new headers object with the 'Auth-Token' header
+  const modifiedHeaders: HeadersInit = new Headers(request.headers);
+  modifiedHeaders.set('Auth-Token', authToken);
 
   // Forward the request to the specified URL
   const response = await fetch('https://orange.ent.haythnet.com/get', {
-    method: req.method,
+    method: request.method,
     headers: modifiedHeaders,
-    body: req.method !== 'GET' && req.method !== 'HEAD' ? req.body : undefined,
+    body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined,
   });
 
   // Send back the response from the forwarded request
   const responseBody = await response.text();
-  res.status(response.status).send(responseBody);
+  return new NextResponse(responseBody, { status: response.status });
 }
