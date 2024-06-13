@@ -8,21 +8,34 @@ export interface Env {
   CODECLUB_NAMESPACE: KVNamespace;
 }
 
-export default {
-  async fetch(request, env, ctx): Promise<Response> {
-    try {
-      const userID = request.headers.get("UserID");
-      const value = await env.CODECLUB_NAMESPACE.get(userID)
-
-      if (value === null) {           
-        return new Response("Value not found", { status: 404 });       
-      }       
-      return new Response(value);
-    } catch (err) {
-      // In a production application, you could instead choose to retry your KV
-      // read or fall back to a default code path.
-      console.error(`KV returned error: ${err}`)
-      return new Response(err, { status: 500 })
-    }
+// Type guard to check if env has CODECLUB_NAMESPACE
+function hasEnvNamespace(env: any): env is Env {
+  return env && typeof env.CODECLUB_NAMESPACE !== 'undefined';
 }
-} satisfies ExportedHandler<Env>;
+
+export async function GET(request: NextRequest): Promise<Response> {
+  try {
+    const context = getRequestContext();
+
+    if (!hasEnvNamespace(context.env)) {
+      throw new Error('Environment does not have CODECLUB_NAMESPACE');
+    }
+
+    const userID = request.headers.get("UserID");
+
+    if (!userID) {
+      return new Response("UserID is missing", { status: 400 });
+    }
+
+    const value = await context.env.CODECLUB_NAMESPACE.get(userID);
+
+    if (value === null) {
+      return new Response("Value not found", { status: 404 });
+    }
+
+    return new Response(value);
+  } catch (err) {
+    console.error(`KV returned error: ${err}`);
+    return new Response('Internal Server Error', { status: 500 });
+  }
+}
