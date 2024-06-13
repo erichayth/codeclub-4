@@ -4,9 +4,13 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 // Define the runtime environment
 export const runtime = 'edge';
 
+interface Env {
+  CODECLUB_NAMESPACE: KVNamespace;
+}
+
 export async function GET(request: NextRequest): Promise<Response> {
-  const context = getRequestContext();
-  const myKV = context.env.CODECLUB_NAMESPACE as KVNamespace;
+  const context = getRequestContext() as unknown as { env: Env };
+  const myKV = context.env.CODECLUB_NAMESPACE;
   const userID = request.headers.get("UserID");
 
   if (!userID) {
