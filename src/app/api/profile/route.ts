@@ -1,19 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 
 // Define the runtime environment
 export const runtime = 'edge';
 
-export async function GET(request: NextRequest): Promise<Response> {
+export interface Env {
+    CODECLUB_NAMESPACE: KVNamespace;
+}
+
+export async function GET(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   try {
-    const myKV = getRequestContext().env.CODECLUB_NAMESPACE;
     const userID = request.headers.get("UserID");
 
     if (!userID) {
       return new Response("UserID is missing", { status: 400 });
     }
 
-    const value = await myKV.get(userID);
+    const value = await env.CODECLUB_NAMESPACE.get(userID);
 
     if (value === null) {
       return new Response("Value not found", { status: 404 });
