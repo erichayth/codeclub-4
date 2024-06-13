@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRequestContext } from '@cloudflare/next-on-pages';
 
 // Define the runtime environment
 export const runtime = 'edge';
@@ -8,34 +7,33 @@ export interface Env {
   CODECLUB_NAMESPACE: KVNamespace;
 }
 
-// Type guard to check if env has CODECLUB_NAMESPACE
-function hasEnvNamespace(env: any): env is Env {
-  return env && typeof env.CODECLUB_NAMESPACE !== 'undefined';
+// Middleware to inject environment variables
+export async function middleware(request: NextRequest): Promise<NextResponse> {
+  const env: Env = {
+    CODECLUB_NAMESPACE: (globalThis as any).CODECLUB_NAMESPACE as KVNamespace,
+  };
+  return handler(request, env);
 }
 
-export async function GET(request: NextRequest): Promise<Response> {
+async function handler(request: NextRequest, env: Env): Promise<NextResponse> {
   try {
-    const context = getRequestContext();
-
-    if (!hasEnvNamespace(context.env)) {
-      throw new Error('Environment does not have CODECLUB_NAMESPACE');
-    }
-
     const userID = request.headers.get("UserID");
 
     if (!userID) {
-      return new Response("UserID is missing", { status: 400 });
+      return new NextResponse("UserID is missing", { status: 400 });
     }
 
-    const value = await context.env.CODECLUB_NAMESPACE.get(userID);
+    const value = await env.CODECLUB_NAMESPACE.get(userID);
 
     if (value === null) {
-      return new Response("Value not found", { status: 404 });
+      return new NextResponse("Value not found", { status: 404 });
     }
 
-    return new Response(value);
+    return new NextResponse(value);
   } catch (err) {
     console.error(`KV returned error: ${err}`);
-    return new Response('Internal Server Error', { status: 500 });
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
+
+export const GET = middleware;
