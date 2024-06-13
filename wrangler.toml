@@ -87,5 +87,5 @@ pages_build_output_dir = ".vercel/output/static"
 # id = "<PRODUCTION_NAMESPACE_ID>"
 
 [[kv_namespaces]]
-binding = "codeclub_namespace"
+binding = "codeclub-4-codeclub_namespace"
 id = "a955efa84e1c4941847c843f3ddf0ecd"
