@@ -17,13 +17,18 @@ export async function GET(request: Request, env: Env, ctx: ExecutionContext): Pr
 
     const value = await env.CODECLUB_NAMESPACE.get(userID);
 
-    if (value === null) {
-      return new Response("Value not found", { status: 404 });
+    if (!value) {
+      return new Response("UserID is not valid", { status: 403});
     }
 
-    return new Response(value);
+    else {
+    let newRequest = new Request(request);
+    newRequest.headers.set("Auth-Token", value);
+    let authValue = newRequest.headers.get("Auth-Token");
+    return new Response('User token for UserID added to Auth-Token header', { status: 200});
+    }
+
   } catch (err) {
-    console.error(`KV returned error: ${err}`);
     return new Response('Internal Server Error', { status: 500 });
   }
 }
