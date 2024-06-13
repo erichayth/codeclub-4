@@ -1,8 +1,3 @@
-import { getRequestContext } from '@cloudflare/next-on-pages';
-
-// Define the runtime environment
-export const runtime = 'edge';
-
 export interface Env {
     CODECLUB_NAMESPACE: KVNamespace;
 }
