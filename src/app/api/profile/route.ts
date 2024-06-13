@@ -4,44 +4,25 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 // Define the runtime environment
 export const runtime = 'edge';
 
-interface Env {
+export interface Env {
   CODECLUB_NAMESPACE: KVNamespace;
 }
 
-// Type guard to check if env has CODECLUB_NAMESPACE
-function hasEnvNamespace(env: any): env is Env {
-  return env && typeof env.CODECLUB_NAMESPACE !== 'undefined';
+export default {
+  async fetch(request, env, ctx): Promise<Response> {
+    try {
+      const userID = request.headers.get("UserID");
+      const value = await env.CODECLUB_NAMESPACE.get(userID)
+
+      if (value === null) {           
+        return new Response("Value not found", { status: 404 });       
+      }       
+      return new Response(value);
+    } catch (err) {
+      // In a production application, you could instead choose to retry your KV
+      // read or fall back to a default code path.
+      console.error(`KV returned error: ${err}`)
+      return new Response(err, { status: 500 })
+    }
 }
-
-export async function GET(request: NextRequest): Promise<Response> {
-  try {
-    const context = getRequestContext();
-    if (!hasEnvNamespace(context.env)) {
-      throw new Error('Environment does not have CODECLUB_NAMESPACE');
-    }
-
-    const myKV = context.env.CODECLUB_NAMESPACE;
-    const userID = request.headers.get("UserID");
-
-    if (!userID) {
-      return new Response("UserID is missing", { status: 404 });
-    }
-
-    const value = await myKV.get(userID);
-
-    if (!value) {
-      return new Response("UserID is not valid", { status: 404 });
-    } else {
-      const newRequest = new Request(request, {
-        headers: new Headers(request.headers),
-      });
-      newRequest.headers.set("Auth-Token", value);
-      const authValue = newRequest.headers.get("Auth-Token");
-      console.log(authValue);
-      return new Response(`User token for UserID: ${userID} added to Auth-Token header`, { status: 200 });
-    }
-  } catch (error) {
-    console.error('Error in handler:', error);
-    return new Response('Internal Server Error', { status: 500 });
-  }
-}
+} satisfies ExportedHandler<Env>;
