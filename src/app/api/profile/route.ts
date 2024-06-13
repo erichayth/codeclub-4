@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Define the runtime environment
+export const runtime = 'edge';
+
 export interface Env {
   codeclub_namespace: KVNamespace;
 }
 
-// Define the runtime environment
-export const runtime = 'edge';
+export async function GET(request: NextRequest, context: { env: Env }) {
+  return handler(request, context.env);
+}
 
-export default {
-  async fetch(request: NextRequest, env: Env) {
-    return handler(request, env);
-  }
+export async function POST(request: NextRequest, context: { env: Env }) {
+  return handler(request, context.env);
 }
 
 async function handler(request: NextRequest, env: Env) {
