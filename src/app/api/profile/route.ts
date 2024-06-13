@@ -20,7 +20,7 @@ async function handler(request: NextRequest, env: Env) {
     console.log('Received request:', request);
 
     // Get the 'UserID' from the request headers
-    const userId = request.headers.get('userid');
+    const userId = request.headers.get('UserID');
     console.log('UserID:', userId);
 
     if (!userId) {
