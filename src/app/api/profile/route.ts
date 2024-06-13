@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export interface Env {
+  codeclub_namespace: KVNamespace;
+}
+
 // Define the runtime environment
 export const runtime = 'edge';
 
-// Ensure the KV namespace is defined
-declare const codeclub_namespace: KVNamespace;
-
-export async function GET(request: NextRequest) {
-  return handler(request);
+export async function GET(request: NextRequest, env: Env) {
+  return handler(request, env);
 }
 
-export async function POST(request: NextRequest) {
-  return handler(request);
+export async function POST(request: NextRequest, env: Env) {
+  return handler(request, env);
 }
 
-async function handler(request: NextRequest) {
+async function handler(request: NextRequest, env: Env) {
   try {
     console.log('Received request:', request);
 
@@ -28,7 +29,7 @@ async function handler(request: NextRequest) {
     }
 
     // Fetch the value from the KV store
-    const authToken = await codeclub_namespace.get(userId);
+    const authToken = await env.codeclub_namespace.get(userId);
     console.log('Auth token:', authToken);
 
     if (!authToken) {
