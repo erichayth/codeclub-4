@@ -14,30 +14,34 @@ function hasEnvNamespace(env: any): env is Env {
 }
 
 export async function GET(request: NextRequest): Promise<Response> {
-  const context = getRequestContext();
+  try {
+    const context = getRequestContext();
+    if (!hasEnvNamespace(context.env)) {
+      throw new Error('Environment does not have CODECLUB_NAMESPACE');
+    }
 
-  if (!hasEnvNamespace(context.env)) {
-    throw new Error('Environment does not have CODECLUB_NAMESPACE');
-  }
+    const myKV = context.env.CODECLUB_NAMESPACE;
+    const userID = request.headers.get("UserID");
 
-  const myKV = context.env.CODECLUB_NAMESPACE;
-  const userID = request.headers.get("UserID");
+    if (!userID) {
+      return new Response("UserID is missing", { status: 404 });
+    }
 
-  if (!userID) {
-    return new Response("UserID is missing", { status: 404 });
-  }
+    const value = await myKV.get(userID);
 
-  const value = await myKV.get(userID);
-
-  if (!value) {
-    return new Response("UserID is not valid", { status: 404 });
-  } else {
-    const newRequest = new Request(request, {
-      headers: new Headers(request.headers),
-    });
-    newRequest.headers.set("Auth-Token", value);
-    const authValue = newRequest.headers.get("Auth-Token");
-    console.log(authValue);
-    return new Response(`User token for UserID: ${userID} added to Auth-Token header`, { status: 200 });
+    if (!value) {
+      return new Response("UserID is not valid", { status: 404 });
+    } else {
+      const newRequest = new Request(request, {
+        headers: new Headers(request.headers),
+      });
+      newRequest.headers.set("Auth-Token", value);
+      const authValue = newRequest.headers.get("Auth-Token");
+      console.log(authValue);
+      return new Response(`User token for UserID: ${userID} added to Auth-Token header`, { status: 200 });
+    }
+  } catch (error) {
+    console.error('Error in handler:', error);
+    return new Response('Internal Server Error', { status: 500 });
   }
 }
