@@ -1,5 +1,3 @@
-
-
 // Define the runtime environment
 export const runtime = 'edge';
 
@@ -7,7 +5,7 @@ export interface Env {
     CODECLUB_NAMESPACE: KVNamespace;
 }
 
-export async function GET(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+export async function GET(request: Request, env: Env): Promise<Response> {
   try {
     const userID = request.headers.get("UserID");
 
