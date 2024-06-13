@@ -7,15 +7,7 @@ export interface Env {
 // Define the runtime environment
 export const runtime = 'edge';
 
-export async function GET(request: NextRequest, env: Env) {
-  return handler(request, env);
-}
-
-export async function POST(request: NextRequest, env: Env) {
-  return handler(request, env);
-}
-
-async function handler(request: NextRequest, env: Env) {
+export async function GET(request: NextRequest, env: Env): Promise<NextResponse> {
   try {
     console.log('Received request:', request);
 
@@ -31,12 +23,12 @@ async function handler(request: NextRequest, env: Env) {
     // Fetch the value from the KV store
     const authToken = await env.CODECLUB_NAMESPACE.get(userId);
     console.log('Auth token:', authToken);
-
+  
     if (!authToken) {
       console.log('Auth token not found for UserID');
       return new NextResponse('Auth token not found for UserID', { status: 404 });
     }
-    
+
     else {
       let newRequest = new NextRequest(request);
       newRequest.headers.set("Auth-Token", authToken);
