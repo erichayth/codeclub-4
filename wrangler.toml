@@ -88,4 +88,4 @@ pages_build_output_dir = ".vercel/output/static"
 
 [[kv_namespaces]]
 binding = "CODECLUB_NAMESPACE"
-id = "fb4bd41f38764fe5ae885e5eae955e33"
+id = "fa955efa84e1c4941847c843f3ddf0ecd"
