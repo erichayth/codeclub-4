@@ -1,73 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getRequestContext } from '@cloudflare/next-on-pages';
 
 // Define the runtime environment
 export const runtime = 'edge';
 
-export interface Env {
-  codeclub_namespace: KVNamespace;
-}
+export async function GET(request: NextRequest): Promise<Response> {
+  const context = getRequestContext();
+  const myKV = context.env.CODECLUB_NAMESPACE as KVNamespace;
+  const userID = request.headers.get("UserID");
 
-export async function GET(request: NextRequest, context: { env: Env }) {
-  return handler(request, context.env);
-}
+  if (!userID) {
+    return new Response("UserID is missing", { status: 404 });
+  }
 
-export async function POST(request: NextRequest, context: { env: Env }) {
-  return handler(request, context.env);
-}
+  const value = await myKV.get(userID);
 
-async function handler(request: NextRequest, env: Env) {
-  try {
-    console.log('Received request:', request);
-
-    // Get the 'UserID' from the request headers
-    const userId = request.headers.get('userid');
-    console.log('UserID:', userId);
-
-    if (!userId) {
-      console.log('UserID header is missing');
-      return new NextResponse('UserID header is missing', { status: 400 });
-    }
-
-    // Fetch the value from the KV store
-    const authToken = await env.codeclub_namespace.get(userId);
-    console.log('Auth token:', authToken);
-
-    if (!authToken) {
-      console.log('Auth token not found for UserID');
-      return new NextResponse('Auth token not found for UserID', { status: 404 });
-    }
-
-    // Create a new headers object with the 'Auth-Token' header
-    const modifiedHeaders: HeadersInit = new Headers(request.headers);
-    modifiedHeaders.set('Auth-Token', authToken);
-
-    console.log('Modified headers:', modifiedHeaders);
-
-    // Create the fetch options
-    const fetchOptions: RequestInit = {
-      method: request.method,
-      headers: modifiedHeaders,
-    };
-
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
-      fetchOptions.body = await request.text();
-      console.log('Request body:', fetchOptions.body);
-    }
-
-    console.log('Fetch options:', fetchOptions);
-
-    // Forward the request to the specified URL
-    const response = await fetch('https://orange.ent.haythnet.com/get', fetchOptions);
-    console.log('Fetch response status:', response.status);
-
-    // Send back the response from the forwarded request
-    const responseBody = await response.text();
-    console.log('Fetch response body:', responseBody);
-
-    return new NextResponse(responseBody, { status: response.status });
-
-  } catch (error) {
-    console.error('Error in handler:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+  if (!value) {
+    return new Response("UserID is not valid", { status: 404 });
+  } else {
+    const newRequest = new Request(request, {
+      headers: new Headers(request.headers),
+    });
+    newRequest.headers.set("Auth-Token", value);
+    const authValue = newRequest.headers.get("Auth-Token");
+    console.log(authValue);
+    return new Response(`User token for UserID: ${userID} added to Auth-Token header`, { status: 200 });
   }
 }
