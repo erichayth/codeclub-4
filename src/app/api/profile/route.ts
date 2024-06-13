@@ -7,12 +7,10 @@ export interface Env {
 // Define the runtime environment
 export const runtime = 'edge';
 
-export async function GET(request: NextRequest, env: Env) {
-  return handler(request, env);
-}
-
-export async function POST(request: NextRequest, env: Env) {
-  return handler(request, env);
+export default {
+  async fetch(request: NextRequest, env: Env) {
+    return handler(request, env);
+  }
 }
 
 async function handler(request: NextRequest, env: Env) {
@@ -20,7 +18,7 @@ async function handler(request: NextRequest, env: Env) {
     console.log('Received request:', request);
 
     // Get the 'UserID' from the request headers
-    const userId = request.headers.get('UserID');
+    const userId = request.headers.get('userid');
     console.log('UserID:', userId);
 
     if (!userId) {
